@@ -1,0 +1,19 @@
+#include "ChooseNum.lib.nxc";
+
+task main() {
+	while(true)
+	{
+		char port = ChooseNum("PORT: ", LCD_LINE2, 1, 4) - 1;
+
+		SetSensorType(port, SENSOR_TYPE_LIGHT_ACTIVE);
+		SetSensorMode(port, SENSOR_MODE_PERCENT);
+
+		while(!ButtonPressed(BTNCENTER,0))
+		{
+			CenterTextOut( LCD_LINE4, " "+NumToStr(Sensor(port))+" ");
+		}
+
+		ResetSensor(port);
+		ClearScreen();
+	}
+}

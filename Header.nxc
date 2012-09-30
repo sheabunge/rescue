@@ -1,0 +1,53 @@
+#ifndef HEADER_INCLUDED
+#define HEADER_INCLUDED
+
+/***************** Sensor And Motor Ports *****************/
+
+#define SENSOR_A 1-1
+#define SENSOR_B 2-1
+#define SENSOR_C 3-1
+
+#define LEFT_MOTOR_PORT  B
+#define RIGHT_MOTOR_PORT C
+
+#define MOTORS  OUT_##LEFT_MOTOR_PORT##RIGHT_MOTOR_PORT
+#define L_MOTOR OUT_##LEFT_MOTOR_PORT
+#define R_MOTOR OUT_##RIGHT_MOTOR_PORT
+
+/*************** Light Sensor Calibrations ***************/
+
+/**
+ * Light Sensor Readings
+ *
+ * Taken from the value of reflected light on a white section
+ */
+
+#ifdef SEASAW
+
+#define SENSOR_A_CAL 57
+#define SENSOR_B_CAL 47
+
+#else
+
+#define SENSOR_A_CAL 66
+#define SENSOR_B_CAL 55
+
+#endif
+
+#define SENSOR_C_CAL 61
+
+/**
+ * Light Sensor States
+ */
+
+const char x = 10;
+
+#define SENSOR_A_BLACK  Sensor(SENSOR_A) < (SENSOR_A_CAL-x)
+#define SENSOR_A_WHITE  Sensor(SENSOR_A) > (SENSOR_A_CAL-x)
+
+#define SENSOR_B_BLACK  Sensor(SENSOR_B) < (SENSOR_B_CAL-x)
+#define SENSOR_B_WHITE  Sensor(SENSOR_B) > (SENSOR_B_CAL-x)
+
+#define SILVER_DETECTED Sensor(SENSOR_C) > (SENSOR_C_CAL+6)
+
+#endif // HEADER_INCLUDED

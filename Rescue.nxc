@@ -1,0 +1,146 @@
+/**
+ * Rescue
+ *
+ * The NXT Generation Robotics
+ * http://robotics.bungeshea.com
+ */
+
+/***************** Initialization ******************/
+
+// Components
+#ifndef MAIN
+
+#define MAIN
+#define WATERTOWER
+#define SEASAW
+
+#endif
+
+// Includes
+#include "header.nxc"
+
+// Constants
+const char POWER = 100;
+bool SilverDetected = false;
+
+// Tasks
+task LineFollow();
+task CanChallenge();
+task WaterTower();
+
+task AlwaysOn() {
+	while(1);
+}
+
+/******************* Subroutines ********************/
+
+void Drive(char pwr = 50) {
+	OnFwdReg(MOTORS, pwr, OUT_REGMODE_SYNC);
+}
+
+void DriveEx(long distance, char turnpct = 0, char pwr = 75, bool brake = true, bool sync = true)
+{
+	RotateMotorEx(MOTORS, pwr, distance, turnpct, sync, brake);
+}
+
+/*********************** Start **********************/
+
+task main() {
+
+	SetSensorType(S1, SENSOR_TYPE_LIGHT_ACTIVE);
+	SetSensorMode(S1, SENSOR_MODE_PERCENT);
+
+	SetSensorType(S2, SENSOR_TYPE_LIGHT_ACTIVE);
+	SetSensorMode(S2, SENSOR_MODE_PERCENT);
+	
+	SetSensorType(S3, SENSOR_TYPE_LIGHT_ACTIVE);
+	SetSensorMode(S3, SENSOR_MODE_PERCENT);
+	
+	SetSensorUltrasonic(S4);
+		 
+	Precedes(LineFollow, CanChallenge, WaterTower, AlwaysOn);
+}
+
+/******************** Line Follow ********************/
+
+task LineFollow()
+{
+	Drive();
+	while(true)
+	{
+		ResetSleepTimer();
+		if(SENSOR_A_BLACK)
+		{
+			if(SENSOR_B_WHITE)
+			{
+				Off(L_MOTOR);
+				OnFwd(R_MOTOR, POWER);
+			}
+			else { // Double black (on the line or on a green square)
+				Drive();
+				Wait(7);
+			}
+		}
+
+		if(SENSOR_A_WHITE)
+		{
+			if(SENSOR_B_BLACK) {
+				Off(R_MOTOR);
+				OnFwd(L_MOTOR, POWER);
+			}
+			else // Double white (shouldn't happen)
+		}
+	}
+}
+
+/****************** Water Tower *******************/
+
+task WaterTower()
+{
+	#ifdef WATERTOWER
+	while(!SilverDetected)
+	{
+		if(SensorUS(IN_4) < 13)
+		{
+			StopTask(LineFollow);
+			Off(MOTORS);
+			DriveEx(170, 0, -50);    // Move the robot back a bit
+			
+			DriveEx(180, 90);        // Turn to the right
+			DriveEx(325);            // Drive forward (away from the line)
+			DriveEx(195, -90);       // Turn to the left (parallell to line)
+			
+			DriveEx(627);            // Drive past the water tower
+			
+			DriveEx(242, -90);       // Turn to the left
+			Drive(75);
+			
+      until(SENSOR_A_BLACK || SENSOR_B_BLACK);
+      Off(MOTORS);
+			DriveEx(180, 90);        // Turn to the right
+		  StartTask(LineFollow);
+		}
+	}
+	#endif
+}
+
+/****************** Can Challenge *******************/
+
+task CanChallenge()
+{
+	until(SILVER_DETECTED);
+	#ifdef WATERTOWER
+		StopTask(WaterTower);
+	#endif
+	StopTask(LineFollow);
+	Off(MOTORS);
+	SilverDetected = true;
+	RotateMotor(MOTORS, 50, 360); // move the robot into the chemical spill
+	Wait(100);
+	OnFwdSync(MOTORS, 25, 60);	  // start the scan
+	until(SensorUS(IN_4) < 35);	  // wait until we detect the can
+	Off(MOTORS);
+	DriveEx(30, 60, 60);          // turn forward a bit
+	Drive(100);                   // get into it!
+	Wait(SEC_10);
+}

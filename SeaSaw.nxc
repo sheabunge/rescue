@@ -1,0 +1,4 @@
+#define MAIN
+#define SEASAW
+
+#include "rescue.nxc"

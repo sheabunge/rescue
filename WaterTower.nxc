@@ -1,0 +1,4 @@
+#define MAIN
+#define WATERTOWER
+
+#include "rescue.nxc"
